@@ -41,28 +41,6 @@ void CEthercatThread::abort()
 void CEthercatThread::doWork()
 {
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
-/*
-    for (int i = 0; i < 60; i ++) {
-
-        // Checks if the process should be aborted
-        mutex.lock();
-        bool abort = _abort;
-        mutex.unlock();
-
-        if (abort) {
-            qDebug()<<"Aborting worker process in Thread "<<thread()->currentThreadId();
-            break;
-        }
-
-        // This will stupidly wait 1 sec doing nothing...
-        QEventLoop loop;
-        QTimer::singleShot(1000, &loop, SLOT(quit()));
-        loop.exec();
-
-        // Once we're done waiting, value is updated
-        emit valueChanged(QString::number(i));
-    }
-*/
 
     /********* ethercat init **************/
 
@@ -75,6 +53,31 @@ void CEthercatThread::doWork()
 
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
+    emit valueChanged("slaves: " + QString::number(num_slaves));
+
+    // Activate master and start operation
+    if (ecw_master_start(master) != 0) {
+        qDebug() << "Error starting cyclic operation of master - giving up" << stderr;
+    }
+
+
+    while(1){
+        // Checks if the process should be aborted
+        mutex.lock();
+        bool abort = _abort;
+        mutex.unlock();
+
+        if (abort) {
+            qDebug()<<"Aborting ethercat process in Thread "<<thread()->currentThreadId();
+            break;
+        }
+
+        // This will stupidly wait 1 sec doing nothing...
+        QEventLoop loop;
+        QTimer::singleShot(1000, &loop, SLOT(quit()));
+        loop.exec();
+    }
+
 
     // Set _working to false, meaning the process can't be aborted anymore.
     mutex.lock();
@@ -82,6 +85,10 @@ void CEthercatThread::doWork()
     mutex.unlock();
 
     qDebug()<<"Worker process finished in Thread "<<thread()->currentThreadId();
+    //free resources
+    ecw_master_stop(master);
+    ecw_master_release(master);
+    fclose(ecatlog);
 
     //Once 60 sec passed, the finished signal is sent
     emit finished();
