@@ -37,3 +37,8 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+
+unix:!macx:!symbian: LIBS += -L/opt/etherlab/lib/ -lethercat_wrapper -lethercat
+
+INCLUDEPATH += /opt/etherlab/include
+

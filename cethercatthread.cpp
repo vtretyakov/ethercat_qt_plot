@@ -5,6 +5,11 @@
 #include <QThread>
 #include <QDebug>
 
+#include <stdio.h>
+
+#include <ethercat_wrapper.h>
+#include <ethercat_wrapper_slave.h>
+
 CEthercatThread::CEthercatThread(QObject *parent) :
     QObject(parent)
 {
@@ -36,7 +41,7 @@ void CEthercatThread::abort()
 void CEthercatThread::doWork()
 {
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
-
+/*
     for (int i = 0; i < 60; i ++) {
 
         // Checks if the process should be aborted
@@ -57,6 +62,19 @@ void CEthercatThread::doWork()
         // Once we're done waiting, value is updated
         emit valueChanged(QString::number(i));
     }
+*/
+
+    /********* ethercat init **************/
+
+    FILE *ecatlog = fopen("./ecat.log", "w");
+    Ethercat_Master_t *master = ecw_master_init(0 /* master id */, ecatlog);
+
+    if (master == NULL) {
+        qDebug() << "Cannot initialize master " << stderr;
+    }
+
+    int num_slaves = ecw_master_slave_count(master);
+    qDebug()<< num_slaves << " slaves found";
 
     // Set _working to false, meaning the process can't be aborted anymore.
     mutex.lock();
