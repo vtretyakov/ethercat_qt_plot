@@ -9,7 +9,9 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = Plot_tool
-TEMPLATE = app
+TEMPLATE = app subdirs
+CONFIG += ordered   # This tells Qt to compile the following SUBDIRS in order
+SUBDIRS = include src
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked as deprecated (the exact warnings
@@ -24,21 +26,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-        cethercatthread.cpp \
-        qcustomplot.cpp
+        src/main.cpp \
+        src/mainwindow.cpp \
+        src/cethercatthread.cpp \
+        src/qcustomplot.cpp
+
 
 HEADERS += \
-        mainwindow.h \
-        cethercatthread.h \
-        qcustomplot.h
+        include/mainwindow.h \
+        include/cethercatthread.h \
+        include/qcustomplot.h
 
 
 FORMS += \
-        mainwindow.ui
+        include/mainwindow.ui
 
 unix:!macx:!symbian: LIBS += -L/opt/etherlab/lib/ -lethercat_wrapper -lethercat
 
-INCLUDEPATH += /opt/etherlab/include
+INCLUDEPATH += /opt/etherlab/include include src
 
