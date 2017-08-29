@@ -10,6 +10,7 @@
 #include <ethercat_wrapper.h>
 #include <ethercat_wrapper_slave.h>
 #include "ecat_master.h"
+#include "profile.h"
 
 CEthercatThread::CEthercatThread(QObject *parent) :
     QObject(parent)
@@ -62,8 +63,11 @@ void CEthercatThread::doWork()
     }
 
     /* Init pdos */
-//    PDOInput  *pdo_input  = malloc(num_slaves*sizeof(PDOInput));
-//    PDOOutput *pdo_output = malloc(num_slaves*sizeof(PDOOutput));
+    PDOInput  *pdo_input  = (PDOInput *)malloc(num_slaves*sizeof(PDOInput));
+    PDOOutput *pdo_output = (PDOOutput *)malloc(num_slaves*sizeof(PDOOutput));
+
+    //init profiler
+    PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
 
     while(1){
         // Checks if the process should be aborted

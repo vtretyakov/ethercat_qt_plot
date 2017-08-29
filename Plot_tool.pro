@@ -31,13 +31,16 @@ SOURCES += \
         src/mainwindow.cpp \
         src/cethercatthread.cpp \
         src/qcustomplot.cpp \
+        src/profile.c
 
 
 HEADERS += \
         include/mainwindow.h \
         include/cethercatthread.h \
         include/qcustomplot.h \
-        include/ecat_master.h
+        include/ecat_master.h \
+        include/cia402.h \
+        include/profile.h
 
 
 FORMS += \
