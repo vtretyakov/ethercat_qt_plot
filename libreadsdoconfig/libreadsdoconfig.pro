@@ -1,4 +1,4 @@
-TARGET = libreadsdoconfig
+TARGET = readsdoconfig
 TEMPLATE = lib
 CONFIG += staticlib 
 
@@ -6,9 +6,10 @@ QMAKE_CFLAGS_WARN_ON -= -Wall   # Optional - disable warnings when compiling thi
 QMAKE_CXXFLAGS_WARN_ON -= -Wall # Optional - disable warnings when compiling this library
 
 HEADERS += \
-	readsdoconfig.h
+	include/readsdoconfig.h
 
 SOURCES += \
-	main.c \
-	readsdoconfig.c
+	src/main.c \
+	src/readsdoconfig.c
 
+INCLUDEPATH += include 

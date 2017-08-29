@@ -9,9 +9,10 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = Plot_tool
-TEMPLATE = app subdirs
+TEMPLATE += app subdirs
 CONFIG += ordered   # This tells Qt to compile the following SUBDIRS in order
-SUBDIRS = include src
+SUBDIRS = libreadsdoconfig #include src
+app.depends = libreadsdoconfig
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked as deprecated (the exact warnings
@@ -29,19 +30,19 @@ SOURCES += \
         src/main.cpp \
         src/mainwindow.cpp \
         src/cethercatthread.cpp \
-        src/qcustomplot.cpp
+        src/qcustomplot.cpp \
 
 
 HEADERS += \
         include/mainwindow.h \
         include/cethercatthread.h \
-        include/qcustomplot.h
+        include/qcustomplot.h \
+        include/ecat_master.h
 
 
 FORMS += \
         include/mainwindow.ui
 
-unix:!macx:!symbian: LIBS += -L/opt/etherlab/lib/ -lethercat_wrapper -lethercat
+unix:!macx:!symbian: LIBS += -L/opt/etherlab/lib/ -lethercat_wrapper -lethercat $$PWD/libreadsdoconfig/libreadsdoconfig.a
 
-INCLUDEPATH += /opt/etherlab/include include src
-
+INCLUDEPATH += /opt/etherlab/include include libreadsdoconfig/include

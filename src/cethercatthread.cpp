@@ -9,7 +9,7 @@
 
 #include <ethercat_wrapper.h>
 #include <ethercat_wrapper_slave.h>
-//#include "ecat_master.h"
+#include "ecat_master.h"
 
 CEthercatThread::CEthercatThread(QObject *parent) :
     QObject(parent)
