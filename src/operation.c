@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#if 0
+
 void target_generate(PositionProfileConfig *config, PDOOutput *pdo_output, PDOInput *pdo_input, int number_slaves)
 {
     for (int i=0; i<number_slaves; i++) {
@@ -45,7 +45,7 @@ void target_generate(PositionProfileConfig *config, PDOOutput *pdo_output, PDOIn
 }
 
 
-
+#if 0
 void cs_command(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output, PositionProfileConfig *profile_config)
 {
     //read user input
@@ -266,7 +266,7 @@ void cs_command(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output, PDOInput *pd
     }
     return;
 }
-
+#endif
 
 void state_machine_control(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output)
 {
@@ -309,7 +309,7 @@ void state_machine_control(PDOOutput *pdo_output, PDOInput *pdo_input, size_t nu
     }
 }
 
-
+#if 0
 void cyclic_synchronous_mode(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output, PositionProfileConfig *profile_config)
 {
     //init display
@@ -358,6 +358,11 @@ void cyclic_synchronous_mode(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output,
     target_generate(profile_config, pdo_output, pdo_input, number_slaves);
 }
 #endif
+void cyclic_synchronous_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output, PositionProfileConfig *profile_config){
+
+}
+
+
 int quit_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves)
 {
     int run_flag = 0;

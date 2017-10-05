@@ -144,7 +144,8 @@ void CEthercatThread::doWork()
         ecw_master_cyclic_function(master);
         pdo_handler(master, pdo_input, pdo_output, -1);
 
-  //      cyclic_synchronous_mode(wnd, &cursor, pdo_output, pdo_input, num_slaves, &output, profile_config);
+        //FixMe: implement the mode
+        cyclic_synchronous_mode(pdo_output, pdo_input, num_slaves, &output, profile_config);
 
         if (abort) {
             qDebug()<<"Aborting ethercat process in Thread "<<thread()->currentThreadId();
