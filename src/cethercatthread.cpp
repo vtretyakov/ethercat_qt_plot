@@ -139,14 +139,22 @@ void CEthercatThread::doWork()
         bool abort = _abort;
         mutex.unlock();
 
+        //ethercat communication
+        ecw_master_cyclic_function(master);
+        pdo_handler(master, pdo_input, pdo_output, -1);
+
+  //      cyclic_synchronous_mode(pdo_output, pdo_input, num_slaves, &output, profile_config);
+
         if (abort) {
             qDebug()<<"Aborting ethercat process in Thread "<<thread()->currentThreadId();
+          //  quit_mode(pdo_output, pdo_input, num_slaves);
+
             break;
         }
 
-        // This will stupidly wait 1 sec doing nothing...
+        // This will stupidly wait 1 msec doing nothing...
         QEventLoop loop;
-        QTimer::singleShot(1000, &loop, SLOT(quit()));
+        QTimer::singleShot(1, &loop, SLOT(quit()));
         loop.exec();
     }
 
@@ -161,6 +169,10 @@ void CEthercatThread::doWork()
     ecw_master_stop(master);
     ecw_master_release(master);
     fclose(ecatlog);
+    free(pdo_input);
+    free(pdo_output);
+    free(profile_config);
+    free(output.target_state);
 
     //Once 60 sec passed, the finished signal is sent
     emit finished();

@@ -29,18 +29,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         src/main.cpp \
         src/mainwindow.cpp \
+        src/cia402.c \
         src/cethercatthread.cpp \
         src/qcustomplot.cpp \
         src/profile.c \
-        src/ecat_master.c
+        src/ecat_master.c \
+        src/operation.c
+
 
 
 HEADERS += \
         include/mainwindow.h \
+        include/cia402.h \
         include/cethercatthread.h \
         include/qcustomplot.h \
         include/ecat_master.h \
-        include/cia402.h \
         include/profile.h \
         include/operation.h \
         include/display.h

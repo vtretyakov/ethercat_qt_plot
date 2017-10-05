@@ -76,5 +76,4 @@ void cyclic_synchronous_mode(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output,
 
 int quit_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves);
 
-
 #endif /* OPERATION_H_ */
