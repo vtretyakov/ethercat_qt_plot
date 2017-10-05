@@ -40,7 +40,9 @@ HEADERS += \
         include/qcustomplot.h \
         include/ecat_master.h \
         include/cia402.h \
-        include/profile.h
+        include/profile.h \
+        include/operation.h \
+        include/display.h
 
 
 FORMS += \

@@ -11,6 +11,7 @@
 #include <ethercat_wrapper_slave.h>
 #include "ecat_master.h"
 #include "profile.h"
+#include "operation.h"
 
 CEthercatThread::CEthercatThread(QObject *parent) :
     QObject(parent)

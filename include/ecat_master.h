@@ -59,9 +59,6 @@ typedef struct {
 } PDOOutput;
 
 
-/*
- * Indexes of PDO elements
- */
 #define PDO_INDEX_STATUSWORD                  0
 #define PDO_INDEX_OPMODEDISP                  1
 #define PDO_INDEX_POSITION_VALUE              2
@@ -93,6 +90,14 @@ typedef struct {
 #define PDO_INDEX_DIGITAL_OUTPUT3            11
 #define PDO_INDEX_DIGITAL_OUTPUT4            13
 #define PDO_INDEX_USER_MOSI                  15
+
+
+/*
+ * Indexes of SDO elements
+ */
+#define DICT_FEEDBACK_SENSOR_PORTS                    0x2100
+#define SUB_ENCODER_FUNCTION                               2
+#define SUB_ENCODER_RESOLUTION                             3
 
 
 /*
@@ -148,18 +153,18 @@ int write_sdo(Ethercat_Slave_t *slave, SdoParam_t *conf);
  */
 int write_sdo_config(Ethercat_Master_t *master, int slave_number, SdoParam_t *config, size_t max_objects);
 
+
 /**
- * @brief Read a sdo object from a local saved sdo list
+ * @brief Read a sdo object from a slave
  *
- * @param slave   slave number
- * @param *config pointer to list of configuration objects
- * @param max_objects number of objects to transfer
+ * @param master  pointer to the master device
+ * @param slave_number   slave number
  * @param index of the object
  * @param subindex of the object
  *
- * @return value of the object, 0 or if not found
+ * @return value of the object, -1 or if not found
  */
-int read_local_sdo(int slave_number, SdoParam_t **config, size_t max_objects, int index, int subindex);
+int read_sdo(Ethercat_Master_t *master, int slave_number, int index, int subindex);
 
 #ifdef __cplusplus
 }
