@@ -31,7 +31,8 @@ SOURCES += \
         src/mainwindow.cpp \
         src/cethercatthread.cpp \
         src/qcustomplot.cpp \
-        src/profile.c
+        src/profile.c \
+        src/ecat_master.c
 
 
 HEADERS += \
