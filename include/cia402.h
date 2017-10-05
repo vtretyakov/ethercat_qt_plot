@@ -74,12 +74,19 @@ typedef enum {
 
 #define CIA402_ERROR_CODE_COMMUNICATION                    0x7500
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 CIA402State cia402_read_state(uint16_t statusword);
 
 uint16_t cia402_command(CIA402Command command, uint16_t controlword);
 
 uint16_t cia402_go_to_state(CIA402State target_state, CIA402State current_state , uint16_t controlword, int skip_state);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _CIA402_H */

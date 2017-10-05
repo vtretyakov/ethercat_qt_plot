@@ -66,6 +66,10 @@ typedef struct {
 #include "ecat_master.h"
 #include "display.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void target_generate(PositionProfileConfig *config, PDOOutput *pdo_output, PDOInput *pdo_input, int number_slaves);
 
 void cs_command(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output, PositionProfileConfig *profiler_config);
@@ -75,5 +79,9 @@ void state_machine_control(PDOOutput *pdo_output, PDOInput *pdo_input, size_t nu
 void cyclic_synchronous_mode(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output, PositionProfileConfig *profile_config);
 
 int quit_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPERATION_H_ */

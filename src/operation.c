@@ -11,6 +11,10 @@
 #include <ctype.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if 0
 void target_generate(PositionProfileConfig *config, PDOOutput *pdo_output, PDOInput *pdo_input, int number_slaves)
 {
@@ -373,3 +377,6 @@ int quit_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves)
     return run_flag;
 }
 
+#ifdef __cplusplus
+}
+#endif

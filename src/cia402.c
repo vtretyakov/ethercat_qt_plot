@@ -5,6 +5,9 @@
 
 #include "cia402.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 CIA402State cia402_read_state(uint16_t statusword)
 {
@@ -198,3 +201,7 @@ uint16_t cia402_go_to_state(CIA402State target_state, CIA402State current_state 
 
     return controlword;
 }
+
+#ifdef __cplusplus
+}
+#endif
