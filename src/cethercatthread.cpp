@@ -45,27 +45,26 @@ void CEthercatThread::doWork()
 {
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
 
-    /********* ethercat init **************/
-
-    FILE *ecatlog = fopen("./ecat.log", "w");
-    Ethercat_Master_t *master = ecw_master_init(0 /* master id */, ecatlog);
     int debug = 0;
     int profile_speed = 50; //rpm
     int profile_acc = 50; //rpm/s
     int profile_torque_acc = 50; // 1/1000 rated torque / s
 
+    /********* ethercat init **************/
+    /* use master id 0 for the first ehtercat master interface (defined by the
+     * libethercat).
+     * The logging output must be redirected into a file, otherwise the output will
+     * interfere with the ncurses windowing. */
+    FILE *ecatlog = fopen("./ecat.log", "w");
+    Ethercat_Master_t *master = ecw_master_init(0 /* master id */, ecatlog);
     if (master == NULL) {
         qDebug() << "Cannot initialize master " << stderr;
+        _abort = true;
     }
 
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
     emit valueChanged("slaves: " + QString::number(num_slaves));
-
-    // Activate master and start operation
-    if (ecw_master_start(master) != 0) {
-        qDebug() << "Error starting cyclic operation of master - giving up" << stderr;
-    }
 
     /* Init pdos */
     PDOInput  *pdo_input  = (PDOInput *)malloc(num_slaves*sizeof(PDOInput));
@@ -127,6 +126,12 @@ void CEthercatThread::doWork()
                 profile_config[i].max_position, profile_config[i].min_position, profile_config[i].ticks_per_turn);
     }
 
+    /********* ethercat start master **************/
+    if (ecw_master_start(master) != 0) {
+        qDebug() << "Error starting cyclic operation of master - giving up" << stderr;
+        _abort = true;
+    }
+    /****************************************************/
 
     while(1){
         // Checks if the process should be aborted
