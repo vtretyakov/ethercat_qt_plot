@@ -358,7 +358,71 @@ void cyclic_synchronous_mode(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output,
     target_generate(profile_config, pdo_output, pdo_input, number_slaves);
 }
 #endif
+
 void cyclic_synchronous_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output, PositionProfileConfig *profile_config){
+
+    //init slaves, set all slaves to opmode CST CIASTATE_SWITCH_ON_DISABLED
+    if (output->init == 0) {
+        output->init = 1;
+        for (int i=0; i<number_slaves; i++) {
+            CIA402State current_state = cia402_read_state(pdo_input[i].statusword);
+            // if the fault is only CIA402_ERROR_CODE_COMMUNICATION we reset it
+            // if the slave is not in CIASTATE_SWITCH_ON_DISABLED or CIASTATE_FAULT we put it in CIASTATE_SWITCH_ON_DISABLED
+            if ( (current_state == CIASTATE_FAULT && pdo_input[i].user_miso == CIA402_ERROR_CODE_COMMUNICATION) ||
+                 (current_state != CIASTATE_FAULT && current_state != CIASTATE_SWITCH_ON_DISABLED) )
+            {
+                pdo_output[i].controlword = cia402_go_to_state(CIASTATE_SWITCH_ON_DISABLED, current_state, pdo_output[i].controlword, 0);
+                output->init = 0;
+            }
+        }
+    }
+
+    //FixMe: implement proper information display
+    //display state
+    for (size_t i = 0; i < number_slaves; i++) {
+        CIA402State state = cia402_read_state(pdo_input[i].statusword);
+        int target = 0;
+        switch(state) {
+        case CIASTATE_NOT_READY:
+        case CIASTATE_SWITCH_ON_DISABLED:
+        case CIASTATE_READY_SWITCH_ON:
+        case CIASTATE_SWITCHED_ON:
+            //wprintw(wnd," Operation mode: Off        ");
+            break;
+        case CIASTATE_QUICK_STOP:
+            //wprintw(wnd," Quick Stop!                ");
+            break;
+        case CIASTATE_FAULT:
+        case CIASTATE_FAULT_REACTION_ACTIVE:
+            //wprintw(wnd," Fault: ");
+            //print_error_code(wnd, pdo_input[i].user_miso);
+            break;
+        case CIASTATE_OP_ENABLED:
+            switch(pdo_input[i].op_mode_display) {
+            case OPMODE_CSP: //CSP
+                target = pdo_output[i].target_position;
+               // wprintw(wnd," Position control %10d", target);
+                break;
+            case OPMODE_CSV: //CSV
+                target = pdo_output[i].target_velocity;
+              //  wprintw(wnd," Velocity control %10d", target);
+                break;
+            case OPMODE_CST://CST
+                target = pdo_output[i].target_torque;
+             //   wprintw(wnd," Torque control   %10d", target);
+                break;
+            }
+            break;
+        }
+    }
+
+    //manage slaves state machines and opmode
+    if (output->manual != 1) {
+        state_machine_control(pdo_output, pdo_input, number_slaves, output);
+    }
+
+    //use profile to generate a target for position/velocity
+    target_generate(profile_config, pdo_output, pdo_input, number_slaves);
 
 }
 
