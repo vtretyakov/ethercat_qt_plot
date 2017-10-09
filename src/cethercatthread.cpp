@@ -65,7 +65,7 @@ void CEthercatThread::doWork()
 
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
-    emit valueChanged("slaves: " + QString::number(num_slaves));
+    emit numSlavesChanged("slaves: " + QString::number(num_slaves));
 
     /* Init pdos */
     PDOInput  *pdo_input  = (PDOInput *)malloc(num_slaves*sizeof(PDOInput));

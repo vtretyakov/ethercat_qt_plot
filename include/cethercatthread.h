@@ -44,9 +44,9 @@ signals:
      */
     void workRequested();
     /**
-     * @brief This signal is emitted when counted value is changed (every sec)
+     * @brief This signal is emitted when number of detected slaves is changed
      */
-    void valueChanged(const QString &value);
+    void numSlavesChanged(const QString &value);
     /**
      * @brief This signal is emitted when process is finished (either by counting 60 sec or being aborted)
      */

@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     o_ecat_thread = new CEthercatThread();
 
     o_ecat_thread->moveToThread(thread);
-    connect(o_ecat_thread, SIGNAL(valueChanged(QString)), ui->label, SLOT(setText(QString)));
+    connect(o_ecat_thread, SIGNAL(numSlavesChanged(QString)), ui->label, SLOT(setText(QString)));
     connect(o_ecat_thread, SIGNAL(workRequested()), thread, SLOT(start()));
     connect(thread, SIGNAL(started()), o_ecat_thread, SLOT(doWork()));
     connect(o_ecat_thread, SIGNAL(finished()), thread, SLOT(quit()), Qt::DirectConnection);
