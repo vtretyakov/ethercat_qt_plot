@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QThread>
+#include <QTimer>
 #include "cethercatthread.h"
 
 namespace Ui {
@@ -27,12 +28,14 @@ private:
      * @brief Object which contains methods that should be runned in another thread
      */
     CEthercatThread *o_ecat_thread;
+    QTimer dataTimer;
 
 private slots:
     void on_startButton_clicked();
     void on_stopButton_clicked();
     void update_torque_ref();
     void select_op_mode_cst(int state);
+    void realtimeDataSlot();
 };
 
 #endif // MAINWINDOW_H
