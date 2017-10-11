@@ -21,7 +21,8 @@ public:
      *
      * It is thread safe as it uses #mutex to protect access to #_abort variable.
      */
-    void abort();
+    void abort();   
+    void set_torque_reference(int16_t torque_ref[]);
 
 private:
     /**
@@ -36,6 +37,8 @@ private:
      * @brief Protects access to #_abort
      */
     QMutex mutex;
+
+    int16_t _torque_ref[];
 
 signals:
     /**
@@ -54,10 +57,7 @@ signals:
 
 public slots:
     /**
-     * @brief Does something
-     *
-     * Counts 60 sec in this example.
-     * Counting is interrupted if #_aborted is set to true.
+     * @brief Main ethercat cyclic task
      */
     void doWork();
 };

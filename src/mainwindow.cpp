@@ -17,6 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(o_ecat_thread, SIGNAL(workRequested()), thread, SLOT(start()));
     connect(thread, SIGNAL(started()), o_ecat_thread, SLOT(doWork()));
     connect(o_ecat_thread, SIGNAL(finished()), thread, SLOT(quit()), Qt::DirectConnection);
+
+    connect(ui->le_torque_ref, SIGNAL(returnPressed()), this, SLOT(update_torque_ref()));
 }
 
 MainWindow::~MainWindow()
@@ -46,4 +48,11 @@ void MainWindow::on_stopButton_clicked()
     o_ecat_thread->abort();
     thread->wait(); // If the thread is not running, this will immediately return.
 
+}
+
+void MainWindow::update_torque_ref()
+{
+    int16_t ref[] = {0};
+    ref[0] = ui->le_torque_ref->text().toShort();
+    o_ecat_thread->set_torque_reference(ref);
 }

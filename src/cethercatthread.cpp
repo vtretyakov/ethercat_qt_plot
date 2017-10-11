@@ -42,6 +42,13 @@ void CEthercatThread::abort()
     mutex.unlock();
 }
 
+void CEthercatThread::set_torque_reference(int16_t torque_ref[]){
+    mutex.lock();
+    _torque_ref[0] = torque_ref[0];
+    mutex.unlock();
+    qDebug() << "value = " << _torque_ref[0];
+}
+
 void CEthercatThread::doWork()
 {
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
@@ -77,6 +84,8 @@ void CEthercatThread::doWork()
     output.sign = 1;
     output.debug = debug;
     output.target_state = (CIA402State *)malloc(num_slaves*sizeof(CIA402State));
+
+    _torque_ref[0] = 0;
 
     //init profiler
     PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
@@ -144,8 +153,44 @@ void CEthercatThread::doWork()
         ecw_master_cyclic_function(master);
         pdo_handler(master, pdo_input, pdo_output, -1);
 
-        //FixMe: implement the mode
-        cyclic_synchronous_mode(pdo_output, pdo_input, num_slaves, &output, profile_config);
+        //FixMe: implement the cyclic mode
+        //init slaves, set all slaves to opmode CST CIASTATE_SWITCH_ON_DISABLED
+        if (output.init == 0) {
+            output.init = 1;
+            for (int i=0; i<num_slaves; i++) {
+                CIA402State current_state = cia402_read_state(pdo_input[i].statusword);
+                // if the fault is only CIA402_ERROR_CODE_COMMUNICATION we reset it
+                // if the slave is not in CIASTATE_SWITCH_ON_DISABLED or CIASTATE_FAULT we put it in CIASTATE_SWITCH_ON_DISABLED
+                if ( (current_state == CIASTATE_FAULT && pdo_input[i].user_miso == CIA402_ERROR_CODE_COMMUNICATION) ||
+                     (current_state != CIASTATE_FAULT && current_state != CIASTATE_SWITCH_ON_DISABLED) )
+                {
+                    pdo_output[i].controlword = cia402_go_to_state(CIASTATE_SWITCH_ON_DISABLED, current_state, pdo_output[i].controlword, 0);
+                    output.init = 0;
+                }
+            }
+        }
+
+        //Display data
+        //ToDo
+
+        //manage user commands
+        //ToDo
+        pdo_output[0].op_mode = OPMODE_CST;
+        (output.target_state)[0] = CIASTATE_OP_ENABLED;
+        //reset profile
+        //profile_config[0].step = 1;
+       // profile_config[0].steps = 0;
+        pdo_output[0].target_torque = _torque_ref[0];
+
+        //manage slaves state machines and opmode
+        if (output.manual != 1) {
+            state_machine_control(pdo_output, pdo_input, num_slaves, &output);
+        }
+
+        //use profile to generate a target for position/velocity
+        //target_generate(profile_config, pdo_output, pdo_input, num_slaves);
+
+        //cyclic_synchronous_mode(pdo_output, pdo_input, num_slaves, &output, profile_config);
 
         if (abort) {
             qDebug()<<"Aborting ethercat process in Thread "<<thread()->currentThreadId();

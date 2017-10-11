@@ -31,6 +31,7 @@ private:
 private slots:
     void on_startButton_clicked();
     void on_stopButton_clicked();
+    void update_torque_ref();
 };
 
 #endif // MAINWINDOW_H
