@@ -18,7 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(thread, SIGNAL(started()), o_ecat_thread, SLOT(doWork()));
     connect(o_ecat_thread, SIGNAL(finished()), thread, SLOT(quit()), Qt::DirectConnection);
 
-    connect(ui->le_torque_ref, SIGNAL(returnPressed()), this, SLOT(update_torque_ref()));
+    connect(ui->sb_torque_ref, SIGNAL(editingFinished()), this, SLOT(update_torque_ref()));
+    connect(ui->cb_torque_mode, SIGNAL(stateChanged(int)), this, SLOT(select_op_mode_cst(int)));
 }
 
 MainWindow::~MainWindow()
@@ -53,6 +54,16 @@ void MainWindow::on_stopButton_clicked()
 void MainWindow::update_torque_ref()
 {
     int16_t ref[] = {0};
-    ref[0] = ui->le_torque_ref->text().toShort();
+    ref[0] = (int16_t)ui->sb_torque_ref->value();
     o_ecat_thread->set_torque_reference(ref);
+}
+
+void MainWindow::select_op_mode_cst(int state)
+{
+
+    int op_mode[] = {0};
+    if (state == 2){
+        op_mode[0] = 10;
+    }
+    o_ecat_thread->set_op_mode(op_mode);
 }

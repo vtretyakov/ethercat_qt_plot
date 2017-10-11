@@ -42,11 +42,21 @@ void CEthercatThread::abort()
     mutex.unlock();
 }
 
-void CEthercatThread::set_torque_reference(int16_t torque_ref[]){
+void CEthercatThread::set_torque_reference(int16_t torque_ref[])
+{
     mutex.lock();
     _torque_ref[0] = torque_ref[0];
     mutex.unlock();
     qDebug() << "value = " << _torque_ref[0];
+}
+
+
+void CEthercatThread::set_op_mode(int op_mode[])
+{
+    mutex.lock();
+    _op_mode[0] = op_mode[0];
+    mutex.unlock();
+    qDebug() << "op_mode: " << _op_mode[0];
 }
 
 void CEthercatThread::doWork()
@@ -95,7 +105,7 @@ void CEthercatThread::doWork()
 
         /* Init pdos */
         pdo_output[i].controlword = 0;
-        pdo_output[i].op_mode = OPMODE_CST;
+        pdo_output[i].op_mode = 0;//OPMODE_CST
         pdo_output[i].target_position = 0;
         pdo_output[i].target_torque = 0;
         pdo_output[i].target_velocity = 0;
@@ -175,7 +185,7 @@ void CEthercatThread::doWork()
 
         //manage user commands
         //ToDo
-        pdo_output[0].op_mode = OPMODE_CST;
+        pdo_output[0].op_mode = _op_mode[0];
         (output.target_state)[0] = CIASTATE_OP_ENABLED;
         //reset profile
         //profile_config[0].step = 1;
