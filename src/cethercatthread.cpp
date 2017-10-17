@@ -55,7 +55,6 @@ void CEthercatThread::set_op_mode(int op_mode)
 {
     mutex.lock();
     _op_mode = op_mode;
-    // qDebug() << "op_mode: " << _op_mode[0] << "  " << op_mode[0];
     if ( op_mode != 0){
         _req_cia402_state = CIASTATE_OP_ENABLED;
     }
@@ -63,9 +62,8 @@ void CEthercatThread::set_op_mode(int op_mode)
         _req_cia402_state = CIASTATE_SWITCH_ON_DISABLED;
     }
     mutex.unlock();
-    qDebug() << "_op_mode " << &_op_mode;
-    qDebug() << "_req_cia402_state " << &_req_cia402_state;
-    qDebug() << "op_mode: " << _op_mode << "  " << op_mode;
+    qDebug() << "req_cia402_state " << _req_cia402_state;
+    qDebug() << "op_mode: " << _op_mode;
 }
 
 void CEthercatThread::doWork()
