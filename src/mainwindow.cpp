@@ -20,6 +20,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->sb_torque_ref, SIGNAL(editingFinished()), this, SLOT(update_torque_ref()));
     connect(ui->cb_torque_mode, SIGNAL(stateChanged(int)), this, SLOT(select_op_mode_cst(int)));
+    connect(ui->pb_freeze_plot, SIGNAL(clicked()), this, SLOT(freeze_plot()));
+
+    //variables
+    _toggle_freeze = false;
+    _ref_value = 0;
 
     // Plot
 
@@ -34,10 +39,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget->addGraph(); // red line
     ui->widget->graph(2)->setPen(QPen(Qt::green));
     ui->widget->graph(2)->setAntialiasedFill(false);
+    ui->widget->addGraph(); // red line
+    ui->widget->graph(3)->setPen(QPen(Qt::DotLine));
+    ui->widget->graph(3)->setAntialiasedFill(false);
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-    //timeTicker->setTimeFormat("%%z");
-    timeTicker->setTimeFormat("%h:%m:%s");
+    timeTicker->setTimeFormat("%%z");
+    //timeTicker->setTimeFormat("%h:%m:%s");
     ui->widget->axisRect()->setupFullAxesBox();
     ui->widget->yAxis->setRange(-1000.0, 1000.0);
 
@@ -47,8 +55,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->widget->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->widget->yAxis2, SLOT(setRange(QCPRange)));
 
     // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
-    connect(&dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
-    dataTimer.start(0); // Interval 0 means to refresh as fast as possible
+    connect(&_dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    _dataTimer.start(0); // Interval 0 means to refresh as fast as possible
 
 }
 
@@ -83,9 +91,8 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::update_torque_ref()
 {
-    int16_t ref[] = {0};
-    ref[0] = (int16_t)ui->sb_torque_ref->value();
-    o_ecat_thread->set_torque_reference(ref);
+    _ref_value = ui->sb_torque_ref->value();
+    o_ecat_thread->set_torque_reference((int16_t)_ref_value);
 }
 
 void MainWindow::select_op_mode_cst(int state)
@@ -96,6 +103,17 @@ void MainWindow::select_op_mode_cst(int state)
         op_mode = 10;
     }
     o_ecat_thread->set_op_mode(op_mode);
+}
+
+void MainWindow::freeze_plot()
+{
+    _toggle_freeze ^=1;
+    if (_toggle_freeze){
+        ui->pb_freeze_plot->setText("Continue");
+    }
+    else{
+        ui->pb_freeze_plot->setText("Pause Plot");
+    }
 }
 
 void MainWindow::realtimeDataSlot()
@@ -109,14 +127,10 @@ void MainWindow::realtimeDataSlot()
   if (key-lastPointKey > 0.001) // at most add point every 1 ms
   {
     // add data to lines:
-    try{
-       ui->widget->graph(0)->addData(key, o_ecat_thread->get_position1_actual());
-       ui->widget->graph(1)->addData(key, o_ecat_thread->get_torque_actual());
-       ui->widget->graph(2)->addData(key, o_ecat_thread->get_velocity1_actual());
-    }
-    catch (int e){
-      qDebug()<< "err: " << e;
-    }
+    ui->widget->graph(0)->addData(key, o_ecat_thread->get_position1_actual());
+    ui->widget->graph(1)->addData(key, o_ecat_thread->get_torque_actual());
+    ui->widget->graph(2)->addData(key, o_ecat_thread->get_velocity1_actual());
+    ui->widget->graph(3)->addData(key, _ref_value);
 
 
     // rescale value (vertical) axis to fit the current data:
@@ -124,9 +138,12 @@ void MainWindow::realtimeDataSlot()
     //ui->customPlot->graph(1)->rescaleValueAxis(true);
     lastPointKey = key;
   }
-  // make key axis range scroll with the data (at a constant range size of 8):
-  ui->widget->xAxis->setRange(key, 8, Qt::AlignRight);
-  ui->widget->replot();
+
+  if(!_toggle_freeze){
+      // make key axis range scroll with the data (at a constant range size of 8):
+      ui->widget->xAxis->setRange(key, 8, Qt::AlignRight);
+      ui->widget->replot();
+  }
 
   // calculate frames per second:
   static double lastFpsKey;

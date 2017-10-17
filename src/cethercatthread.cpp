@@ -47,10 +47,10 @@ void CEthercatThread::abort()
     mutex.unlock();
 }
 
-void CEthercatThread::set_torque_reference(int16_t torque_ref[])
+void CEthercatThread::set_torque_reference(int16_t torque_ref)
 {
     mutex.lock();
-    _torque_ref = torque_ref[0];
+    _torque_ref = torque_ref;
     mutex.unlock();
     qDebug() << "value = " << _torque_ref;
 }

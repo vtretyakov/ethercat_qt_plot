@@ -28,7 +28,9 @@ private:
      * @brief Object which contains methods that should be runned in another thread
      */
     CEthercatThread *o_ecat_thread;
-    QTimer dataTimer;
+    QTimer _dataTimer;
+    bool _toggle_freeze;
+    int _ref_value;
 
 private slots:
     void on_startButton_clicked();
@@ -36,6 +38,7 @@ private slots:
     void update_torque_ref();
     void select_op_mode_cst(int state);
     void realtimeDataSlot();
+    void freeze_plot();
 };
 
 #endif // MAINWINDOW_H

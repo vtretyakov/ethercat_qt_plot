@@ -23,7 +23,7 @@ public:
      * It is thread safe as it uses #mutex to protect access to #_abort variable.
      */
     void abort();   
-    void set_torque_reference(int16_t torque_ref[]);
+    void set_torque_reference(int16_t torque_ref);
     void set_op_mode(int op_mode);
     int get_position1_actual();
     int get_position2_actual();
