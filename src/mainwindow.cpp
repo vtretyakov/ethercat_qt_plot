@@ -31,6 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget->addGraph(); // red line
     ui->widget->graph(1)->setPen(QPen(Qt::red));
     ui->widget->graph(1)->setAntialiasedFill(false);
+    ui->widget->addGraph(); // red line
+    ui->widget->graph(2)->setPen(QPen(Qt::green));
+    ui->widget->graph(2)->setAntialiasedFill(false);
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     //timeTicker->setTimeFormat("%%z");
@@ -97,17 +100,25 @@ void MainWindow::select_op_mode_cst(int state)
 
 void MainWindow::realtimeDataSlot()
 {
-  static QTime time(QTime::currentTime());
+  //static QTime time(QTime::currentTime());
   // calculate two new data points:
   //FixMe: find a better timer. QElapsedTimer is suggested.
   //double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
   double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
   static double lastPointKey = 0;
-  if (key-lastPointKey > 0.002) // at most add point every 2 ms
+  if (key-lastPointKey > 0.001) // at most add point every 1 ms
   {
     // add data to lines:
-    ui->widget->graph(0)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
-    ui->widget->graph(1)->addData(key, qCos(key)+qrand()/(double)RAND_MAX*0.5*qSin(key/0.4364));
+    try{
+       ui->widget->graph(0)->addData(key, o_ecat_thread->get_position1_actual());
+       ui->widget->graph(1)->addData(key, o_ecat_thread->get_torque_actual());
+       ui->widget->graph(2)->addData(key, o_ecat_thread->get_velocity1_actual());
+    }
+    catch (int e){
+      qDebug()<< "err: " << e;
+    }
+
+
     // rescale value (vertical) axis to fit the current data:
     //ui->customPlot->graph(0)->rescaleValueAxis();
     //ui->customPlot->graph(1)->rescaleValueAxis(true);

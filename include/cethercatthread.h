@@ -25,6 +25,13 @@ public:
     void abort();   
     void set_torque_reference(int16_t torque_ref[]);
     void set_op_mode(int op_mode);
+    int get_position1_actual();
+    int get_position2_actual();
+    int get_velocity1_actual();
+    int get_velocity2_actual();
+    int get_torque_actual();
+    bool is_running();
+
 
 private:
     /**
@@ -43,6 +50,12 @@ private:
     int16_t _torque_ref;
     int _op_mode;
     CIA402State _req_cia402_state;
+
+    int _position_actual1;
+    int _position_actual2;
+    int _velocity_actual1;
+    int _velocity_actual2;
+    int _torque_actual;
 
 signals:
     /**

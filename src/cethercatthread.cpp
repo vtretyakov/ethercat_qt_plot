@@ -19,6 +19,11 @@ CEthercatThread::CEthercatThread(QObject *parent) :
 {
     _working =false;
     _abort = false;
+    int _position_actual1 = 0;
+    int _position_actual2 = 0;
+    int _velocity_actual1 = 0;
+    int _velocity_actual2 = 0;
+    int _torque_actual = 0;
 }
 
 void CEthercatThread::requestWork()
@@ -64,6 +69,36 @@ void CEthercatThread::set_op_mode(int op_mode)
     mutex.unlock();
     qDebug() << "req_cia402_state " << _req_cia402_state;
     qDebug() << "op_mode: " << _op_mode;
+}
+
+int CEthercatThread::get_position1_actual()
+{
+    return _position_actual1;
+}
+
+int CEthercatThread::get_position2_actual()
+{
+    return _position_actual2;
+}
+
+int CEthercatThread::get_velocity1_actual()
+{
+    return _velocity_actual1;
+}
+
+int CEthercatThread::get_velocity2_actual()
+{
+    return _velocity_actual2;
+}
+
+int CEthercatThread::get_torque_actual()
+{
+    return _torque_actual;
+}
+
+bool CEthercatThread::is_running()
+{
+    return _working;
 }
 
 void CEthercatThread::doWork()
@@ -191,7 +226,14 @@ void CEthercatThread::doWork()
         }
 
         //Display data
-        //ToDo
+        //FixMe: make a nice method
+        mutex.lock();
+        _position_actual1 = pdo_input[0].position_value;
+        _position_actual2 = pdo_input[0].secondary_position_value;
+        _velocity_actual1 = pdo_input[0].velocity_value;
+        _velocity_actual2 = pdo_input[0].secondary_velocity_value;
+        _torque_actual = pdo_input[0].torque_value;
+        mutex.unlock();
 
         //manage user commands
         //ToDo
