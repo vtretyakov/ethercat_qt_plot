@@ -45,18 +45,27 @@ void CEthercatThread::abort()
 void CEthercatThread::set_torque_reference(int16_t torque_ref[])
 {
     mutex.lock();
-    _torque_ref[0] = torque_ref[0];
+    _torque_ref = torque_ref[0];
     mutex.unlock();
-    qDebug() << "value = " << _torque_ref[0];
+    qDebug() << "value = " << _torque_ref;
 }
 
 
-void CEthercatThread::set_op_mode(int op_mode[])
+void CEthercatThread::set_op_mode(int op_mode)
 {
     mutex.lock();
-    _op_mode[0] = op_mode[0];
+    _op_mode = op_mode;
+    // qDebug() << "op_mode: " << _op_mode[0] << "  " << op_mode[0];
+    if ( op_mode != 0){
+        _req_cia402_state = CIASTATE_OP_ENABLED;
+    }
+    else{
+        _req_cia402_state = CIASTATE_SWITCH_ON_DISABLED;
+    }
     mutex.unlock();
-    qDebug() << "op_mode: " << _op_mode[0];
+    qDebug() << "_op_mode " << &_op_mode;
+    qDebug() << "_req_cia402_state " << &_req_cia402_state;
+    qDebug() << "op_mode: " << _op_mode << "  " << op_mode;
 }
 
 void CEthercatThread::doWork()
@@ -83,6 +92,9 @@ void CEthercatThread::doWork()
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
     emit numSlavesChanged("slaves: " + QString::number(num_slaves));
+    _op_mode = 0;
+    _req_cia402_state = CIASTATE_NOT_READY;
+
 
     /* Init pdos */
     PDOInput  *pdo_input  = (PDOInput *)malloc(num_slaves*sizeof(PDOInput));
@@ -95,7 +107,7 @@ void CEthercatThread::doWork()
     output.debug = debug;
     output.target_state = (CIA402State *)malloc(num_slaves*sizeof(CIA402State));
 
-    _torque_ref[0] = 0;
+    _torque_ref = 0;
 
     //init profiler
     PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
@@ -185,17 +197,17 @@ void CEthercatThread::doWork()
 
         //manage user commands
         //ToDo
-        pdo_output[0].op_mode = _op_mode[0];
-        (output.target_state)[0] = CIASTATE_OP_ENABLED;
+        pdo_output[0].op_mode = _op_mode;
+        output.target_state[0] = _req_cia402_state;
         //reset profile
         //profile_config[0].step = 1;
        // profile_config[0].steps = 0;
-        pdo_output[0].target_torque = _torque_ref[0];
+        pdo_output[0].target_torque = _torque_ref;
 
         //manage slaves state machines and opmode
-        if (output.manual != 1) {
+  //      if (output.manual != 1) {
             state_machine_control(pdo_output, pdo_input, num_slaves, &output);
-        }
+  //      }
 
         //use profile to generate a target for position/velocity
         //target_generate(profile_config, pdo_output, pdo_input, num_slaves);

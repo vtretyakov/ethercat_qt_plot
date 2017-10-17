@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QMutex>
+#include "cia402.h"
 
 class CEthercatThread : public QObject
 {
@@ -23,7 +24,7 @@ public:
      */
     void abort();   
     void set_torque_reference(int16_t torque_ref[]);
-    void set_op_mode(int op_mode[]);
+    void set_op_mode(int op_mode);
 
 private:
     /**
@@ -39,8 +40,9 @@ private:
      */
     QMutex mutex;
 
-    int16_t _torque_ref[];
-    int _op_mode[];
+    int16_t _torque_ref;
+    int _op_mode;
+    CIA402State _req_cia402_state;
 
 signals:
     /**

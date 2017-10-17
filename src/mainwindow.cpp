@@ -88,9 +88,9 @@ void MainWindow::update_torque_ref()
 void MainWindow::select_op_mode_cst(int state)
 {
 
-    int op_mode[] = {0};
+    int op_mode = 0;
     if (state == 2){
-        op_mode[0] = 10;
+        op_mode = 10;
     }
     o_ecat_thread->set_op_mode(op_mode);
 }
@@ -99,7 +99,9 @@ void MainWindow::realtimeDataSlot()
 {
   static QTime time(QTime::currentTime());
   // calculate two new data points:
-  double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+  //FixMe: find a better timer. QElapsedTimer is suggested.
+  //double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+  double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
   static double lastPointKey = 0;
   if (key-lastPointKey > 0.002) // at most add point every 2 ms
   {
