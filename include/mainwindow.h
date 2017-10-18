@@ -31,6 +31,7 @@ private:
     QTimer _dataTimer;
     bool _toggle_freeze;
     int _ref_value;
+    float _x_range;
 
 private slots:
     void on_startButton_clicked();
@@ -41,6 +42,9 @@ private slots:
     void freeze_plot();
     void select_slave(const int &index);
     void update_slaves_number(const int &value);
+    void mouseWheel(QWheelEvent * wheel_event);
+    void mousePress();
+    void selectionChanged();
 };
 
 #endif // MAINWINDOW_H

@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //variables initialization
     _toggle_freeze = false;
     _ref_value = 0;
+    _x_range = 8;
 
     // Plot
 
@@ -55,6 +56,15 @@ MainWindow::MainWindow(QWidget *parent) :
     // make left and bottom axes transfer their ranges to right and top axes:
     connect(ui->widget->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->widget->xAxis2, SLOT(setRange(QCPRange)));
     connect(ui->widget->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->widget->yAxis2, SLOT(setRange(QCPRange)));
+
+
+    // connect slot that ties some axis selections together (especially opposite axes):
+    connect(ui->widget, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
+
+    // connect slots that takes care that when an axis is selected, only that direction can be dragged and zoomed:
+    connect(ui->widget, SIGNAL(mousePress(QMouseEvent*)), this, SLOT(mousePress()));
+    connect(ui->widget, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(mouseWheel(QWheelEvent*)));
+
 
     // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
     connect(&_dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
@@ -136,6 +146,89 @@ void MainWindow::update_slaves_number(const int &value)
     }
 }
 
+
+void MainWindow::mouseWheel(QWheelEvent * wheel_event)
+{
+  // if an axis is selected, only allow the direction of that axis to be zoomed
+  // if no axis is selected, both directions may be zoomed
+
+  if (ui->widget->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
+  {
+    ui->widget->axisRect()->setRangeZoom(ui->widget->xAxis->orientation());
+    _x_range += wheel_event->delta()/480.0;
+    if (_x_range < 1){
+        _x_range = 1;
+    }
+    qDebug() << "x_range" << _x_range;
+  }
+  else if (ui->widget->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
+  {
+    ui->widget->axisRect()->setRangeZoom(ui->widget->yAxis->orientation());
+  }
+  else
+  {
+    ui->widget->axisRect()->setRangeZoom(Qt::Horizontal|Qt::Vertical);
+  }
+}
+
+
+void MainWindow::mousePress()
+{
+  // if an axis is selected, only allow the direction of that axis to be dragged
+  // if no axis is selected, both directions may be dragged
+
+  if (ui->widget->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
+    ui->widget->axisRect()->setRangeDrag(ui->widget->xAxis->orientation());
+  else if (ui->widget->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
+    ui->widget->axisRect()->setRangeDrag(ui->widget->yAxis->orientation());
+  else
+    ui->widget->axisRect()->setRangeDrag(Qt::Horizontal|Qt::Vertical);
+}
+
+
+void MainWindow::selectionChanged()
+{
+  /*
+   normally, axis base line, axis tick labels and axis labels are selectable separately, but we want
+   the user only to be able to select the axis as a whole, so we tie the selected states of the tick labels
+   and the axis base line together. However, the axis label shall be selectable individually.
+
+   The selection state of the left and right axes shall be synchronized as well as the state of the
+   bottom and top axes.
+
+   Further, we want to synchronize the selection of the graphs with the selection state of the respective
+   legend item belonging to that graph. So the user can select a graph by either clicking on the graph itself
+   or on its legend item.
+  */
+
+  // make top and bottom axes be selected synchronously, and handle axis and tick labels as one selectable object:
+  if (ui->widget->xAxis->selectedParts().testFlag(QCPAxis::spAxis) || ui->widget->xAxis->selectedParts().testFlag(QCPAxis::spTickLabels) ||
+      ui->widget->xAxis2->selectedParts().testFlag(QCPAxis::spAxis) || ui->widget->xAxis2->selectedParts().testFlag(QCPAxis::spTickLabels))
+  {
+    ui->widget->xAxis2->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+    ui->widget->xAxis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+  }
+  // make left and right axes be selected synchronously, and handle axis and tick labels as one selectable object:
+  if (ui->widget->yAxis->selectedParts().testFlag(QCPAxis::spAxis) || ui->widget->yAxis->selectedParts().testFlag(QCPAxis::spTickLabels) ||
+      ui->widget->yAxis2->selectedParts().testFlag(QCPAxis::spAxis) || ui->widget->yAxis2->selectedParts().testFlag(QCPAxis::spTickLabels))
+  {
+    ui->widget->yAxis2->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+    ui->widget->yAxis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+  }
+
+  // synchronize selection of graphs with selection of corresponding legend items:
+  for (int i=0; i<ui->widget->graphCount(); ++i)
+  {
+    QCPGraph *graph = ui->widget->graph(i);
+    QCPPlottableLegendItem *item = ui->widget->legend->itemWithPlottable(graph);
+    if (item->selected() || graph->selected())
+    {
+      item->setSelected(true);
+      graph->setSelection(QCPDataSelection(graph->data()->dataRange()));
+    }
+  }
+}
+
 void MainWindow::realtimeDataSlot()
 {
   //static QTime time(QTime::currentTime());
@@ -161,7 +254,7 @@ void MainWindow::realtimeDataSlot()
 
   if(!_toggle_freeze){
       // make key axis range scroll with the data (at a constant range size of 8):
-      ui->widget->xAxis->setRange(key, 8, Qt::AlignRight);
+      ui->widget->xAxis->setRange(key, _x_range, Qt::AlignRight);
       ui->widget->replot();
   }
 
