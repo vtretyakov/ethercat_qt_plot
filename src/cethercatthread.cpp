@@ -19,11 +19,12 @@ CEthercatThread::CEthercatThread(QObject *parent) :
 {
     _working =false;
     _abort = false;
-    int _position_actual1 = 0;
-    int _position_actual2 = 0;
-    int _velocity_actual1 = 0;
-    int _velocity_actual2 = 0;
-    int _torque_actual = 0;
+    _position_actual1 = 0;
+    _position_actual2 = 0;
+    _velocity_actual1 = 0;
+    _velocity_actual2 = 0;
+    _torque_actual = 0;
+    _selected_slave_id = 0;
 }
 
 void CEthercatThread::requestWork()
@@ -101,6 +102,14 @@ bool CEthercatThread::is_running()
     return _working;
 }
 
+void CEthercatThread::select_slave(int slave_id)
+{
+    mutex.lock();
+    _selected_slave_id = slave_id;
+    mutex.unlock();
+    qDebug() << "select slave " << _selected_slave_id;
+}
+
 void CEthercatThread::doWork()
 {
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
@@ -124,7 +133,7 @@ void CEthercatThread::doWork()
 
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
-    emit numSlavesChanged("slaves: " + QString::number(num_slaves));
+    emit numSlavesChanged(num_slaves);
     _op_mode = 0;
     _req_cia402_state = CIASTATE_NOT_READY;
 
@@ -228,21 +237,21 @@ void CEthercatThread::doWork()
         //Display data
         //FixMe: make a nice method
         mutex.lock();
-        _position_actual1 = pdo_input[0].position_value;
-        _position_actual2 = pdo_input[0].secondary_position_value;
-        _velocity_actual1 = pdo_input[0].velocity_value;
-        _velocity_actual2 = pdo_input[0].secondary_velocity_value;
-        _torque_actual = pdo_input[0].torque_value;
+        _position_actual1 = pdo_input[_selected_slave_id].position_value;
+        _position_actual2 = pdo_input[_selected_slave_id].secondary_position_value;
+        _velocity_actual1 = pdo_input[_selected_slave_id].velocity_value;
+        _velocity_actual2 = pdo_input[_selected_slave_id].secondary_velocity_value;
+        _torque_actual = pdo_input[_selected_slave_id].torque_value;
         mutex.unlock();
 
         //manage user commands
         //ToDo
-        pdo_output[0].op_mode = _op_mode;
-        output.target_state[0] = _req_cia402_state;
+        pdo_output[_selected_slave_id].op_mode = _op_mode;
+        output.target_state[_selected_slave_id] = _req_cia402_state;
         //reset profile
-        //profile_config[0].step = 1;
-       // profile_config[0].steps = 0;
-        pdo_output[0].target_torque = _torque_ref;
+        //profile_config[_selected_slave_id].step = 1;
+       // profile_config[_selected_slave_id].steps = 0;
+        pdo_output[_selected_slave_id].target_torque = _torque_ref;
 
         //manage slaves state machines and opmode
   //      if (output.manual != 1) {

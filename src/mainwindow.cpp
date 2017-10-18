@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     o_ecat_thread = new CEthercatThread();
 
     o_ecat_thread->moveToThread(thread);
-    connect(o_ecat_thread, SIGNAL(numSlavesChanged(QString)), ui->label, SLOT(setText(QString)));
+    connect(o_ecat_thread, SIGNAL(numSlavesChanged(int)), this, SLOT(update_slaves_number(int)));
     connect(o_ecat_thread, SIGNAL(workRequested()), thread, SLOT(start()));
     connect(thread, SIGNAL(started()), o_ecat_thread, SLOT(doWork()));
     connect(o_ecat_thread, SIGNAL(finished()), thread, SLOT(quit()), Qt::DirectConnection);
@@ -22,7 +22,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cb_torque_mode, SIGNAL(stateChanged(int)), this, SLOT(select_op_mode_cst(int)));
     connect(ui->pb_freeze_plot, SIGNAL(clicked()), this, SLOT(freeze_plot()));
 
-    //variables
+    connect(ui->cmbbx_slave_id, SIGNAL(currentIndexChanged(int)), this, SLOT(select_slave(int)));
+
+    //variables initialization
     _toggle_freeze = false;
     _ref_value = 0;
 
@@ -113,6 +115,24 @@ void MainWindow::freeze_plot()
     }
     else{
         ui->pb_freeze_plot->setText("Pause Plot");
+    }
+}
+
+void MainWindow::select_slave(const int &index)
+{
+    o_ecat_thread->select_slave(index);
+}
+
+void MainWindow::update_slaves_number(const int &value)
+{
+    if (value > 1){
+        ui->label->setText("Found " + QString::number(value) + " slaves");
+    }
+    else {
+        ui->label->setText("Found " + QString::number(value) + " slave");
+    }
+    for (int i = 0; i < value; i++){
+        ui->cmbbx_slave_id->addItem("Node " + QString::number(i));
     }
 }
 

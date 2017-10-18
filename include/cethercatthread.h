@@ -31,6 +31,7 @@ public:
     int get_velocity2_actual();
     int get_torque_actual();
     bool is_running();
+    void select_slave(int slave_id);
 
 
 private:
@@ -56,6 +57,7 @@ private:
     int _velocity_actual1;
     int _velocity_actual2;
     int _torque_actual;
+    int _selected_slave_id;
 
 signals:
     /**
@@ -66,7 +68,7 @@ signals:
     /**
      * @brief This signal is emitted when number of detected slaves is changed
      */
-    void numSlavesChanged(const QString &value);
+    void numSlavesChanged(const int &value);
     /**
      * @brief This signal is emitted when process is finished (either by counting 60 sec or being aborted)
      */
@@ -77,5 +79,6 @@ public slots:
      * @brief Main ethercat cyclic task
      */
     void doWork();
+
 };
 #endif // CETHERCATTHREAD_H

@@ -39,6 +39,8 @@ private slots:
     void select_op_mode_cst(int state);
     void realtimeDataSlot();
     void freeze_plot();
+    void select_slave(const int &index);
+    void update_slaves_number(const int &value);
 };
 
 #endif // MAINWINDOW_H
