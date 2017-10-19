@@ -1,16 +1,16 @@
-#ifndef CETHERCATTHREAD_H
-#define CETHERCATTHREAD_H
+#ifndef ETHERCATTHREAD_H
+#define ETHERCATTHREAD_H
 
 #include <QObject>
 #include <QMutex>
 #include "cia402.h"
 
-class CEthercatThread : public QObject
+class EthercatThread : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit CEthercatThread(QObject *parent = 0);
+    explicit EthercatThread(QObject *parent = 0);
     /**
      * @brief Requests the process to start
      *
@@ -38,26 +38,26 @@ private:
     /**
      * @brief Process is aborted when @em true
      */
-    bool _abort;
+    bool abort_;
     /**
      * @brief @em true when Worker is doing work
      */
-    bool _working;
+    bool working_;
     /**
      * @brief Protects access to #_abort
      */
-    QMutex mutex;
+    QMutex mutex_;
 
-    int16_t _torque_ref;
-    int _op_mode;
-    CIA402State _req_cia402_state;
+    int16_t torque_ref_;
+    int op_mode_;
+    CIA402State req_cia402_state_;
 
-    int _position_actual1;
-    int _position_actual2;
-    int _velocity_actual1;
-    int _velocity_actual2;
-    int _torque_actual;
-    int _selected_slave_id;
+    int position_actual1_;
+    int position_actual2_;
+    int velocity_actual1_;
+    int velocity_actual2_;
+    int torque_actual_;
+    int selected_slave_id_;
 
 signals:
     /**
@@ -81,4 +81,4 @@ public slots:
     void doWork();
 
 };
-#endif // CETHERCATTHREAD_H
+#endif // ETHERCATTHREAD_H

@@ -1,4 +1,4 @@
-#include "cethercatthread.h"
+#include "ethercatthread.h"
 #include <QTimer>
 #include <QEventLoop>
 
@@ -14,103 +14,103 @@
 #include "operation.h"
 
 
-CEthercatThread::CEthercatThread(QObject *parent) :
+EthercatThread::EthercatThread(QObject *parent) :
     QObject(parent)
 {
-    _working =false;
-    _abort = false;
-    _position_actual1 = 0;
-    _position_actual2 = 0;
-    _velocity_actual1 = 0;
-    _velocity_actual2 = 0;
-    _torque_actual = 0;
-    _selected_slave_id = 0;
+    working_ =false;
+    abort_ = false;
+    position_actual1_ = 0;
+    position_actual2_ = 0;
+    velocity_actual1_ = 0;
+    velocity_actual2_ = 0;
+    torque_actual_ = 0;
+    selected_slave_id_ = 0;
 }
 
-void CEthercatThread::requestWork()
+void EthercatThread::requestWork()
 {
-    mutex.lock();
-    _working = true;
-    _abort = false;
+    mutex_.lock();
+    working_ = true;
+    abort_ = false;
     qDebug()<<"Request worker start in Thread "<<thread()->currentThreadId();
-    mutex.unlock();
+    mutex_.unlock();
 
     emit workRequested();
 }
 
-void CEthercatThread::abort()
+void EthercatThread::abort()
 {
-    mutex.lock();
-    if (_working) {
-        _abort = true;
+    mutex_.lock();
+    if (working_) {
+        abort_ = true;
         qDebug()<<"Request worker aborting in Thread "<<thread()->currentThreadId();
     }
-    mutex.unlock();
+    mutex_.unlock();
 }
 
-void CEthercatThread::set_torque_reference(int16_t torque_ref)
+void EthercatThread::set_torque_reference(int16_t torque_ref)
 {
-    mutex.lock();
-    _torque_ref = torque_ref;
-    mutex.unlock();
-    qDebug() << "value = " << _torque_ref;
+    mutex_.lock();
+    torque_ref_ = torque_ref;
+    mutex_.unlock();
+    qDebug() << "value = " << torque_ref_;
 }
 
 
-void CEthercatThread::set_op_mode(int op_mode)
+void EthercatThread::set_op_mode(int op_mode)
 {
-    mutex.lock();
-    _op_mode = op_mode;
+    mutex_.lock();
+    op_mode_ = op_mode;
     if ( op_mode != 0){
-        _req_cia402_state = CIASTATE_OP_ENABLED;
+        req_cia402_state_ = CIASTATE_OP_ENABLED;
     }
     else{
-        _req_cia402_state = CIASTATE_SWITCH_ON_DISABLED;
+        req_cia402_state_ = CIASTATE_SWITCH_ON_DISABLED;
     }
-    mutex.unlock();
-    qDebug() << "req_cia402_state " << _req_cia402_state;
-    qDebug() << "op_mode: " << _op_mode;
+    mutex_.unlock();
+    qDebug() << "req_cia402_state " << req_cia402_state_;
+    qDebug() << "op_mode: " << op_mode_;
 }
 
-int CEthercatThread::get_position1_actual()
+int EthercatThread::get_position1_actual()
 {
-    return _position_actual1;
+    return position_actual1_;
 }
 
-int CEthercatThread::get_position2_actual()
+int EthercatThread::get_position2_actual()
 {
-    return _position_actual2;
+    return position_actual2_;
 }
 
-int CEthercatThread::get_velocity1_actual()
+int EthercatThread::get_velocity1_actual()
 {
-    return _velocity_actual1;
+    return velocity_actual1_;
 }
 
-int CEthercatThread::get_velocity2_actual()
+int EthercatThread::get_velocity2_actual()
 {
-    return _velocity_actual2;
+    return velocity_actual2_;
 }
 
-int CEthercatThread::get_torque_actual()
+int EthercatThread::get_torque_actual()
 {
-    return _torque_actual;
+    return torque_actual_;
 }
 
-bool CEthercatThread::is_running()
+bool EthercatThread::is_running()
 {
-    return _working;
+    return working_;
 }
 
-void CEthercatThread::select_slave(int slave_id)
+void EthercatThread::select_slave(int slave_id)
 {
-    mutex.lock();
-    _selected_slave_id = slave_id;
-    mutex.unlock();
-    qDebug() << "select slave " << _selected_slave_id;
+    mutex_.lock();
+    selected_slave_id_ = slave_id;
+    mutex_.unlock();
+    qDebug() << "select slave " << selected_slave_id_;
 }
 
-void CEthercatThread::doWork()
+void EthercatThread::doWork()
 {
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
 
@@ -128,14 +128,14 @@ void CEthercatThread::doWork()
     Ethercat_Master_t *master = ecw_master_init(0 /* master id */, ecatlog);
     if (master == NULL) {
         qDebug() << "Cannot initialize master " << stderr;
-        _abort = true;
+        abort_ = true;
     }
 
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
     emit numSlavesChanged(num_slaves);
-    _op_mode = 0;
-    _req_cia402_state = CIASTATE_NOT_READY;
+    op_mode_ = 0;
+    req_cia402_state_ = CIASTATE_NOT_READY;
 
 
     /* Init pdos */
@@ -149,7 +149,7 @@ void CEthercatThread::doWork()
     output.debug = debug;
     output.target_state = (CIA402State *)malloc(num_slaves*sizeof(CIA402State));
 
-    _torque_ref = 0;
+    torque_ref_ = 0;
 
     //init profiler
     PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
@@ -203,15 +203,15 @@ void CEthercatThread::doWork()
     /********* ethercat start master **************/
     if (ecw_master_start(master) != 0) {
         qDebug() << "Error starting cyclic operation of master - giving up" << stderr;
-        _abort = true;
+        abort_ = true;
     }
     /****************************************************/
 
     while(1){
         // Checks if the process should be aborted
-        mutex.lock();
-        bool abort = _abort;
-        mutex.unlock();
+        mutex_.lock();
+        bool abort = abort_;
+        mutex_.unlock();
 
         //ethercat communication
         ecw_master_cyclic_function(master);
@@ -236,22 +236,22 @@ void CEthercatThread::doWork()
 
         //Display data
         //FixMe: make a nice method
-        mutex.lock();
-        _position_actual1 = pdo_input[_selected_slave_id].position_value;
-        _position_actual2 = pdo_input[_selected_slave_id].secondary_position_value;
-        _velocity_actual1 = pdo_input[_selected_slave_id].velocity_value;
-        _velocity_actual2 = pdo_input[_selected_slave_id].secondary_velocity_value;
-        _torque_actual = pdo_input[_selected_slave_id].torque_value;
-        mutex.unlock();
+        mutex_.lock();
+        position_actual1_ = pdo_input[selected_slave_id_].position_value;
+        position_actual2_ = pdo_input[selected_slave_id_].secondary_position_value;
+        velocity_actual1_ = pdo_input[selected_slave_id_].velocity_value;
+        velocity_actual2_ = pdo_input[selected_slave_id_].secondary_velocity_value;
+        torque_actual_ = pdo_input[selected_slave_id_].torque_value;
+        mutex_.unlock();
 
         //manage user commands
         //ToDo
-        pdo_output[_selected_slave_id].op_mode = _op_mode;
-        output.target_state[_selected_slave_id] = _req_cia402_state;
+        pdo_output[selected_slave_id_].op_mode = op_mode_;
+        output.target_state[selected_slave_id_] = req_cia402_state_;
         //reset profile
         //profile_config[_selected_slave_id].step = 1;
        // profile_config[_selected_slave_id].steps = 0;
-        pdo_output[_selected_slave_id].target_torque = _torque_ref;
+        pdo_output[selected_slave_id_].target_torque = torque_ref_;
 
         //manage slaves state machines and opmode
   //      if (output.manual != 1) {
@@ -278,9 +278,9 @@ void CEthercatThread::doWork()
 
 
     // Set _working to false, meaning the process can't be aborted anymore.
-    mutex.lock();
-    _working = false;
-    mutex.unlock();
+    mutex_.lock();
+    working_ = false;
+    mutex_.unlock();
 
     qDebug()<<"Worker process finished in Thread "<<thread()->currentThreadId();
     //free resources

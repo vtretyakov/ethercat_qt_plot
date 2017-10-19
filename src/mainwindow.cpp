@@ -10,13 +10,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // The thread and the o_ecat_thread are created in the constructor so it is always safe to delete them.
     thread = new QThread();
-    o_ecat_thread = new CEthercatThread();
+    ecat_thread = new EthercatThread();
 
-    o_ecat_thread->moveToThread(thread);
-    connect(o_ecat_thread, SIGNAL(numSlavesChanged(int)), this, SLOT(update_slaves_number(int)));
-    connect(o_ecat_thread, SIGNAL(workRequested()), thread, SLOT(start()));
-    connect(thread, SIGNAL(started()), o_ecat_thread, SLOT(doWork()));
-    connect(o_ecat_thread, SIGNAL(finished()), thread, SLOT(quit()), Qt::DirectConnection);
+    ecat_thread->moveToThread(thread);
+    connect(ecat_thread, SIGNAL(numSlavesChanged(int)), this, SLOT(update_slaves_number(int)));
+    connect(ecat_thread, SIGNAL(workRequested()), thread, SLOT(start()));
+    connect(thread, SIGNAL(started()), ecat_thread, SLOT(doWork()));
+    connect(ecat_thread, SIGNAL(finished()), thread, SLOT(quit()), Qt::DirectConnection);
 
     connect(ui->sb_torque_ref, SIGNAL(editingFinished()), this, SLOT(update_torque_ref()));
     connect(ui->cb_torque_mode, SIGNAL(stateChanged(int)), this, SLOT(select_op_mode_cst(int)));
@@ -25,9 +25,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->cmbbx_slave_id, SIGNAL(currentIndexChanged(int)), this, SLOT(select_slave(int)));
 
     //variables initialization
-    _toggle_freeze = false;
-    _ref_value = 0;
-    _x_range = 8;
+    toggle_freeze_ = false;
+    ref_value_ = 0;
+    x_range_ = 8;
 
     // Plot
 
@@ -67,18 +67,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
-    connect(&_dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
-    _dataTimer.start(0); // Interval 0 means to refresh as fast as possible
+    connect(&myDataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    myDataTimer.start(0); // Interval 0 means to refresh as fast as possible
 
 }
 
 MainWindow::~MainWindow()
 {
-    o_ecat_thread->abort();
+    ecat_thread->abort();
     thread->wait();
     qDebug()<<"Deleting thread and o_ecat_thread in Thread "<<this->QObject::thread()->currentThreadId();
     delete thread;
-    delete o_ecat_thread;
+    delete ecat_thread;
 
     delete ui;
 }
@@ -86,25 +86,25 @@ MainWindow::~MainWindow()
 void MainWindow::on_startButton_clicked()
 {
     // To avoid having two threads running simultaneously, the previous thread is aborted.
-    o_ecat_thread->abort();
+    ecat_thread->abort();
     thread->wait(); // If the thread is not running, this will immediately return.
 
-    o_ecat_thread->requestWork();
+    ecat_thread->requestWork();
 }
 
 
 void MainWindow::on_stopButton_clicked()
 {
     // To avoid having two threads running simultaneously, the previous thread is aborted.
-    o_ecat_thread->abort();
+    ecat_thread->abort();
     thread->wait(); // If the thread is not running, this will immediately return.
 
 }
 
 void MainWindow::update_torque_ref()
 {
-    _ref_value = ui->sb_torque_ref->value();
-    o_ecat_thread->set_torque_reference((int16_t)_ref_value);
+    ref_value_ = ui->sb_torque_ref->value();
+    ecat_thread->set_torque_reference((int16_t)ref_value_);
 }
 
 void MainWindow::select_op_mode_cst(int state)
@@ -114,13 +114,13 @@ void MainWindow::select_op_mode_cst(int state)
     if (state == 2){
         op_mode = 10;
     }
-    o_ecat_thread->set_op_mode(op_mode);
+    ecat_thread->set_op_mode(op_mode);
 }
 
 void MainWindow::freeze_plot()
 {
-    _toggle_freeze ^=1;
-    if (_toggle_freeze){
+    toggle_freeze_ ^=1;
+    if (toggle_freeze_){
         ui->pb_freeze_plot->setText("Continue");
     }
     else{
@@ -130,7 +130,7 @@ void MainWindow::freeze_plot()
 
 void MainWindow::select_slave(const int &index)
 {
-    o_ecat_thread->select_slave(index);
+    ecat_thread->select_slave(index);
 }
 
 void MainWindow::update_slaves_number(const int &value)
@@ -155,11 +155,11 @@ void MainWindow::mouseWheel(QWheelEvent * wheel_event)
   if (ui->widget->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
   {
     ui->widget->axisRect()->setRangeZoom(ui->widget->xAxis->orientation());
-    _x_range += wheel_event->delta()/480.0;
-    if (_x_range < 1){
-        _x_range = 1;
+    x_range_ += wheel_event->delta()/480.0;
+    if (x_range_ < 1){
+        x_range_ = 1;
     }
-    qDebug() << "x_range" << _x_range;
+    qDebug() << "x_range" << x_range_;
   }
   else if (ui->widget->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
   {
@@ -240,10 +240,10 @@ void MainWindow::realtimeDataSlot()
   if (key-lastPointKey > 0.001) // at most add point every 1 ms
   {
     // add data to lines:
-    ui->widget->graph(0)->addData(key, o_ecat_thread->get_position1_actual());
-    ui->widget->graph(1)->addData(key, o_ecat_thread->get_torque_actual());
-    ui->widget->graph(2)->addData(key, o_ecat_thread->get_velocity1_actual());
-    ui->widget->graph(3)->addData(key, _ref_value);
+    ui->widget->graph(0)->addData(key, ecat_thread->get_position1_actual());
+    ui->widget->graph(1)->addData(key, ecat_thread->get_torque_actual());
+    ui->widget->graph(2)->addData(key, ecat_thread->get_velocity1_actual());
+    ui->widget->graph(3)->addData(key, ref_value_);
 
 
     // rescale value (vertical) axis to fit the current data:
@@ -252,9 +252,9 @@ void MainWindow::realtimeDataSlot()
     lastPointKey = key;
   }
 
-  if(!_toggle_freeze){
+  if(!toggle_freeze_){
       // make key axis range scroll with the data (at a constant range size of 8):
-      ui->widget->xAxis->setRange(key, _x_range, Qt::AlignRight);
+      ui->widget->xAxis->setRange(key, x_range_, Qt::AlignRight);
       ui->widget->replot();
   }
 

@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
-#include "cethercatthread.h"
+#include "ethercatthread.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,11 +27,11 @@ private:
     /**
      * @brief Object which contains methods that should be runned in another thread
      */
-    CEthercatThread *o_ecat_thread;
-    QTimer _dataTimer;
-    bool _toggle_freeze;
-    int _ref_value;
-    float _x_range;
+    EthercatThread *ecat_thread;
+    QTimer myDataTimer;
+    bool toggle_freeze_;
+    int ref_value_;
+    float x_range_;
 
 private slots:
     void on_startButton_clicked();

@@ -30,23 +30,23 @@ SOURCES += \
         src/main.cpp \
         src/mainwindow.cpp \
         src/cia402.c \
-        src/cethercatthread.cpp \
         src/qcustomplot.cpp \
         src/profile.c \
         src/ecat_master.c \
-        src/operation.c
+        src/operation.c \
+        src/ethercatthread.cpp
 
 
 
 HEADERS += \
         include/mainwindow.h \
         include/cia402.h \
-        include/cethercatthread.h \
         include/qcustomplot.h \
         include/ecat_master.h \
         include/profile.h \
         include/operation.h \
-        include/display.h
+        include/display.h \
+        include/ethercatthread.h
 
 
 FORMS += \
