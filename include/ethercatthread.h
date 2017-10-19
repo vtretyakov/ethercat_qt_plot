@@ -49,6 +49,7 @@ private:
     QMutex mutex_;
 
     int16_t torque_ref_;
+    int16_t torque_ref_last_;
     int op_mode_;
     CIA402State req_cia402_state_;
 

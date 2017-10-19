@@ -11,6 +11,7 @@
 #include <ethercat_wrapper_slave.h>
 #include "ecat_master.h"
 #include "operation.h"
+#include "profiler.h"
 
 
 EthercatThread::EthercatThread(QObject *parent) :
@@ -24,6 +25,8 @@ EthercatThread::EthercatThread(QObject *parent) :
     velocity_actual2_ = 0;
     torque_actual_ = 0;
     selected_slave_id_ = 0;
+    op_mode_ = 0;
+    req_cia402_state_ = CIASTATE_NOT_READY;
 }
 
 void EthercatThread::requestWork()
@@ -114,9 +117,6 @@ void EthercatThread::doWork()
     qDebug()<<"Starting worker process in Thread "<<thread()->currentThreadId();
 
     int debug = 0;
-    int profile_speed = 50; //rpm
-    int profile_acc = 50; //rpm/s
-    int profile_torque_acc = 50; // 1/1000 rated torque / s
 
     /********* ethercat init **************/
     /* use master id 0 for the first ehtercat master interface (defined by the
@@ -133,8 +133,6 @@ void EthercatThread::doWork()
     int num_slaves = ecw_master_slave_count(master);
     qDebug()<< num_slaves << " slaves found";
     emit numSlavesChanged(num_slaves);
-    op_mode_ = 0;
-    req_cia402_state_ = CIASTATE_NOT_READY;
 
 
     /* Init pdos */
@@ -151,7 +149,9 @@ void EthercatThread::doWork()
     torque_ref_ = 0;
 
     //init profiler
-    PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
+    //PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
+    //Profiler *profiler = new Profiler();
+
 
     //init for all slaves
     for (int i = 0; i < num_slaves; i++) {
@@ -219,6 +219,7 @@ void EthercatThread::doWork()
         output.target_state[selected_slave_id_] = req_cia402_state_;
         pdo_output[selected_slave_id_].target_torque = torque_ref_;
 
+
         //manage slaves state machines and opmode
         state_machine_control(pdo_output, pdo_input, num_slaves, &output);
 
@@ -248,7 +249,7 @@ void EthercatThread::doWork()
     fclose(ecatlog);
     free(pdo_input);
     free(pdo_output);
-    free(profile_config);
+    //free(profile_config);
     free(output.target_state);
 
     //Once 60 sec passed, the finished signal is sent

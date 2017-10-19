@@ -270,14 +270,14 @@ void cs_command(WINDOW *wnd, Cursor *cursor, PDOOutput *pdo_output, PDOInput *pd
 
 void state_machine_control(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves, OutputValues *output)
 {
-    for (int i=0; i<number_slaves; i++) {
+    for (unsigned i=0; i<number_slaves; i++) {
         CIA402State current_state = cia402_read_state(pdo_input[i].statusword);
         switch(pdo_output[i].op_mode) {
         case OPMODE_CSP://CSP
         case OPMODE_CSV://CSV
         case OPMODE_CST://CST
             if (current_state == CIASTATE_FAULT) { //fault state, wait for acknowledge by the user
-                if (i == output->select && output->fault_ack) { //send reset fault command for selected slave
+                if ((int)i == output->select && output->fault_ack) { //send reset fault command for selected slave
                     pdo_output[i].controlword = cia402_go_to_state(CIASTATE_SWITCH_ON_DISABLED, current_state, pdo_output[i].controlword, 0);
                     output->fault_ack = 0;
                 }
@@ -364,7 +364,7 @@ void cyclic_synchronous_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t 
     //init slaves, set all slaves to opmode CST CIASTATE_SWITCH_ON_DISABLED
     if (output->init == 0) {
         output->init = 1;
-        for (int i=0; i<number_slaves; i++) {
+        for (unsigned i=0; i<number_slaves; i++) {
             CIA402State current_state = cia402_read_state(pdo_input[i].statusword);
             // if the fault is only CIA402_ERROR_CODE_COMMUNICATION we reset it
             // if the slave is not in CIASTATE_SWITCH_ON_DISABLED or CIASTATE_FAULT we put it in CIASTATE_SWITCH_ON_DISABLED
@@ -381,7 +381,7 @@ void cyclic_synchronous_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t 
     //display state
     for (size_t i = 0; i < number_slaves; i++) {
         CIA402State state = cia402_read_state(pdo_input[i].statusword);
-        int target = 0;
+        //int target = 0;
         switch(state) {
         case CIASTATE_NOT_READY:
         case CIASTATE_SWITCH_ON_DISABLED:
@@ -400,15 +400,15 @@ void cyclic_synchronous_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t 
         case CIASTATE_OP_ENABLED:
             switch(pdo_input[i].op_mode_display) {
             case OPMODE_CSP: //CSP
-                target = pdo_output[i].target_position;
+               // target = pdo_output[i].target_position;
                // wprintw(wnd," Position control %10d", target);
                 break;
             case OPMODE_CSV: //CSV
-                target = pdo_output[i].target_velocity;
+               // target = pdo_output[i].target_velocity;
               //  wprintw(wnd," Velocity control %10d", target);
                 break;
             case OPMODE_CST://CST
-                target = pdo_output[i].target_torque;
+              //  target = pdo_output[i].target_torque;
              //   wprintw(wnd," Torque control   %10d", target);
                 break;
             }
@@ -430,7 +430,7 @@ void cyclic_synchronous_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t 
 int quit_mode(PDOOutput *pdo_output, PDOInput *pdo_input, size_t number_slaves)
 {
     int run_flag = 0;
-    for (int i=0; i<number_slaves; i++) {
+    for (unsigned i=0; i<number_slaves; i++) {
         if ( pdo_input[i].op_mode_display == OPMODE_CSP ||
              pdo_input[i].op_mode_display == OPMODE_CSV ||
              pdo_input[i].op_mode_display == OPMODE_CST )

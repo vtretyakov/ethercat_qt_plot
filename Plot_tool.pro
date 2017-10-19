@@ -34,7 +34,8 @@ SOURCES += \
         src/profile.c \
         src/ecat_master.c \
         src/operation.c \
-        src/ethercatthread.cpp
+        src/ethercatthread.cpp \
+        src/profiler.cpp
 
 
 
@@ -46,7 +47,8 @@ HEADERS += \
         include/profile.h \
         include/operation.h \
         include/display.h \
-        include/ethercatthread.h
+        include/ethercatthread.h \
+        include/profiler.h
 
 
 FORMS += \
