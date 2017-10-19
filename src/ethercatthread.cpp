@@ -150,7 +150,10 @@ void EthercatThread::doWork()
 
     //init profiler
     //PositionProfileConfig *profile_config = (PositionProfileConfig *)malloc(num_slaves*sizeof(PositionProfileConfig));
-    //Profiler *profiler = new Profiler();
+    Profiler *profiler = new Profiler();
+    bool new_reference = true;
+    int steps = 0;
+    int step = 0;
 
 
     //init for all slaves
@@ -218,6 +221,19 @@ void EthercatThread::doWork()
         pdo_output[selected_slave_id_].op_mode = op_mode_;
         output.target_state[selected_slave_id_] = req_cia402_state_;
         pdo_output[selected_slave_id_].target_torque = torque_ref_;
+
+        if(new_reference){
+            profiler->motion_profile->max_torque = 1000;
+            profiler->motion_profile->max_torque_acceleration = 50;
+            /* Compute steps needed for the target torque */
+            steps = profiler->init_torque_profile(profiler->motion_profile, 100, 0, 50, 50);
+            qDebug() << "steps: " << steps;
+            new_reference = false;
+        } else if(step <= steps) {
+            int target_torque = profiler->linear_profile_generate_in_steps(profiler->motion_profile, step);
+            qDebug() << "t_ref = " << target_torque;
+            step++;
+        }
 
 
         //manage slaves state machines and opmode
