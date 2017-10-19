@@ -142,7 +142,7 @@ void EthercatThread::doWork()
     PDOOutput *pdo_output = (PDOOutput *)malloc(num_slaves*sizeof(PDOOutput));
 
     //init output structure
-    OutputValues output = {0};
+    OutputValues output = {};
     output.app_mode = CYCLIC_SYNCHRONOUS_MODE;
     output.sign = 1;
     output.debug = debug;
