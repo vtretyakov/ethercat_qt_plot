@@ -10,7 +10,6 @@
 #include <ethercat_wrapper.h>
 #include <ethercat_wrapper_slave.h>
 #include "ecat_master.h"
-#include "profile.h"
 #include "operation.h"
 
 
@@ -168,36 +167,6 @@ void EthercatThread::doWork()
 
         //init output structure
         output.target_state[i] = CIASTATE_SWITCH_ON_DISABLED;
-
-        //init profiler
-        profile_config[i].profile_speed = profile_speed;
-        profile_config[i].profile_acceleration = profile_acc;
-        profile_config[i].profile_torque_acceleration = profile_torque_acc;
-
-        profile_config[i].max_torque = 1000; //max torque is 1000
-        profile_config[i].max_torque_acceleration = profile_torque_acc;
-        profile_config[i].max_acceleration = profile_acc;
-        profile_config[i].max_speed = 10000;
-        profile_config[i].max_position = 0x7fffffff;
-        profile_config[i].min_position = -0x7fffffff;
-        profile_config[i].ticks_per_turn = 65536; //default value
-        //try to find the correct ticks_per_turn in the sdo config
-        for (int sensor_port=1; sensor_port<=3; sensor_port++) {
-            //get sensor config
-            int sensor_config = read_sdo(master, i, DICT_FEEDBACK_SENSOR_PORTS, sensor_port);
-            if (sensor_config != 0) {
-                int sensor_function = read_sdo(master, i, sensor_config, SUB_ENCODER_FUNCTION);
-                //check sensor function
-                if (sensor_function == 1 || sensor_function == 3) { //sensor functions 1 and 3 are motion control
-                    profile_config[i].ticks_per_turn = read_sdo(master, i, sensor_config, SUB_ENCODER_RESOLUTION);
-                    break;
-                }
-            }
-        }
-        init_position_profile_limits(&(profile_config[i].motion_profile),
-                profile_config[i].max_torque, profile_config[i].max_torque_acceleration,
-                profile_config[i].max_acceleration, profile_config[i].max_speed,
-                profile_config[i].max_position, profile_config[i].min_position, profile_config[i].ticks_per_turn);
     }
 
     /********* ethercat start master **************/
@@ -235,7 +204,7 @@ void EthercatThread::doWork()
         }
 
         //Display data
-        //FixMe: make a nice method
+        //FixMe: put it all into one structure
         mutex_.lock();
         position_actual1_ = pdo_input[selected_slave_id_].position_value;
         position_actual2_ = pdo_input[selected_slave_id_].secondary_position_value;
@@ -248,20 +217,10 @@ void EthercatThread::doWork()
         //ToDo
         pdo_output[selected_slave_id_].op_mode = op_mode_;
         output.target_state[selected_slave_id_] = req_cia402_state_;
-        //reset profile
-        //profile_config[_selected_slave_id].step = 1;
-       // profile_config[_selected_slave_id].steps = 0;
         pdo_output[selected_slave_id_].target_torque = torque_ref_;
 
         //manage slaves state machines and opmode
-  //      if (output.manual != 1) {
-            state_machine_control(pdo_output, pdo_input, num_slaves, &output);
-  //      }
-
-        //use profile to generate a target for position/velocity
-        //target_generate(profile_config, pdo_output, pdo_input, num_slaves);
-
-        //cyclic_synchronous_mode(pdo_output, pdo_input, num_slaves, &output, profile_config);
+        state_machine_control(pdo_output, pdo_input, num_slaves, &output);
 
         if (abort) {
             qDebug()<<"Aborting ethercat process in Thread "<<thread()->currentThreadId();
